@@ -13,7 +13,8 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "npm run typecheck && electron-vite build",
+    "build:check": "npm run typecheck && electron-vite build",
+    "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
@@ -41,6 +42,7 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.2",
     "vite": "^6.2.1",
+    "vite-plugin-eslint": "^1.8.1",
     "vue": "^3.5.13",
     "vue-tsc": "^2.2.8"
   }
