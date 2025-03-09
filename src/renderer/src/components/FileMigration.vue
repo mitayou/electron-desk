@@ -38,14 +38,16 @@
 
     <div v-if="oldFolderPath && newFolderPath" class="migration-options">
       <h3>迁移选项</h3>
-      <el-tree
-        ref="migrationTree"
-        :data="migrationItems"
-        show-checkbox
-        node-key="path"
-        :default-checked-keys="defaultCheckedItems"
-        :props="{ label: 'name', children: 'children' }"
-      ></el-tree>
+      <div class="tree-container">
+        <el-tree
+          ref="migrationTree"
+          show-checkbox
+          node-key="path"
+          :data="migrationItems"
+          :default-checked-keys="defaultCheckedItems"
+          :props="{ label: 'name', children: 'children' }"
+        ></el-tree>
+      </div>
 
       <div class="actions-panel">
         <el-button type="primary" :disabled="!canMigrate" @click="startMigration"
@@ -317,6 +319,19 @@ onBeforeUnmount(() => {
   border: 1px solid #eee;
   border-radius: 8px;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 300px);
+}
+
+.tree-container {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  max-height: calc(100vh - 400px);
 }
 
 .actions-panel {

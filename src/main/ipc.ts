@@ -55,8 +55,14 @@ export function setupIpcHandlers() {
               log: `已迁移目录: ${relativePath}`
             })
           } else {
-            // 如果是文件，直接复制
-            fs.copyFileSync(item, targetPath)
+            // 如果是文件，使用异步方式复制并显示进度
+            await copyFileWithProgress(item, targetPath, (progress, speed) => {
+              event.sender.send('migration-progress', {
+                progress: Math.floor(((completed + progress) / total) * 100),
+                log: `正在迁移文件: ${relativePath} - ${Math.floor(progress * 100)}% (${speed} MB/s)`
+              })
+            })
+
             event.sender.send('migration-progress', {
               progress: Math.floor((++completed / total) * 100),
               log: `已迁移文件: ${relativePath}`
@@ -128,4 +134,51 @@ function copyFolderRecursive(source, target) {
       fs.copyFileSync(sourcePath, targetPath)
     }
   }
+}
+
+// 使用异步方式复制文件并报告进度
+function copyFileWithProgress(source, target, progressCallback) {
+  return new Promise((resolve, reject) => {
+    const stat = fs.statSync(source)
+    const totalSize = stat.size
+    let copiedSize = 0
+    let lastTime = Date.now()
+    let lastCopied = 0
+
+    // 创建读写流
+    const readStream = fs.createReadStream(source)
+    const writeStream = fs.createWriteStream(target)
+
+    // 监听数据块
+    readStream.on('data', (chunk) => {
+      copiedSize += chunk.length
+
+      // 计算进度和速度
+      const progress = totalSize > 0 ? copiedSize / totalSize : 0
+      const currentTime = Date.now()
+      const timeDiff = (currentTime - lastTime) / 1000 // 转换为秒
+
+      if (timeDiff >= 0.5) { // 每0.5秒更新一次
+        const bytesCopiedSinceLastUpdate = copiedSize - lastCopied
+        const speedMBps = (bytesCopiedSinceLastUpdate / timeDiff) / (1024 * 1024)
+
+        progressCallback(progress, speedMBps.toFixed(2))
+
+        lastTime = currentTime
+        lastCopied = copiedSize
+      }
+    })
+
+    // 处理完成
+    writeStream.on('finish', () => {
+      resolve(true)
+    })
+
+    // 处理错误
+    readStream.on('error', reject)
+    writeStream.on('error', reject)
+
+    // 开始复制
+    readStream.pipe(writeStream)
+  })
 }
